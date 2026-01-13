@@ -28,9 +28,14 @@ image/
 problems_*.json
 *.json
 
-# Failed IDs
+# Documentation - keep only QUICKSTART.md and README.md
+COMPLETION_REPORT.md
+DELIVERY_SUMMARY.md
+GITHUB_CHECKLIST.md
+GITHUB_UPLOAD_GUIDE.md
+IMPLEMENTATION.md
+PROJECT_STRUCTURE.md
+PROJECT_SUMMARY.md
 
-# Temporary files
-*.tmp
-*.bak
-.DS_Store
+# Failed IDs
+failed_ids.txt
