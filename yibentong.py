@@ -268,6 +268,9 @@ def generate_sql_insert(problem_data, problem_id):
         input_desc = ensure_paragraph_tags(problem_data.get('input',''))
         output_desc = ensure_paragraph_tags(problem_data.get('output',''))
         title = escape_sql(problem_data.get('title',''))
+        # 去掉题目名称前面的题号（如"1000："或"1000："）以避免与自增id冲突
+        title = re.sub(r'^\d+[：:.、]', '', title).strip()
+        
         description = escape_sql(description)
         input_desc = escape_sql(input_desc)
         output_desc = escape_sql(output_desc)
