@@ -39,3 +39,10 @@ PROJECT_SUMMARY.md
 
 # Failed IDs
 failed_ids.txt
+# Backup files
+yibentong - 可运行备份.py
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store
