@@ -159,8 +159,10 @@ def crawl_problem(problem_id, session):
             if str(problem_id) in h3_text:
                 title = h3_text
                 break
+        problem_exists = True
         if not title:
             title = f"{problem_id}：未知题目"
+            problem_exists = False
         time_limit = '1000'
         memory_limit = '32768'
         all_text = soup.get_text()
@@ -206,7 +208,8 @@ def crawl_problem(problem_id, session):
             'memory_limit': memory_limit,
             'description_text': problem_description_text,
             'input_text': input_description_text,
-            'output_text': output_description_text
+            'output_text': output_description_text,
+            'exists': problem_exists
         }
         return pdata
     except Exception:
@@ -215,6 +218,9 @@ def crawl_problem(problem_id, session):
 
 def save_sample_files(problem_data, problem_id):
     if not problem_data:
+        return False
+    if not problem_data.get('exists', True):
+        logging.info('跳过不存在的题目: %s', problem_id)
         return False
     try:
         m = re.match(r'^(\d+)', problem_data.get('title',''))
@@ -233,6 +239,9 @@ def save_sample_files(problem_data, problem_id):
 
 def generate_sql_insert(problem_data, problem_id):
     if not problem_data:
+        return None
+    if not problem_data.get('exists', True):
+        logging.info('跳过不存在的题目SQL生成: %s', problem_id)
         return None
     try:
         def find_primary_image_filename(pid):
@@ -362,12 +371,14 @@ def crawl_ids_concurrent(id_list, max_workers=3, rate_delay=0.5):
             pid = futures[fut]
             try:
                 data = fut.result()
-                if data:
+                if data and data.get('exists', True):
                     results[pid] = data
                     try:
                         save_sample_files(data, pid)
                     except Exception:
                         logging.exception('保存样例失败: %s', pid)
+                elif data:
+                    results[pid] = data
                 else:
                     failed.append(pid)
             except Exception:
@@ -466,11 +477,13 @@ def main():
             sess = make_session()
             for pid in ids:
                 pdata = crawl_problem(pid, sess)
-                if pdata:
+                if pdata and pdata.get('exists', True):
                     save_sample_files(pdata, pid)
                     all_problems[pid] = pdata
+                elif pdata:
+                    all_problems[pid] = pdata
                 else:
-                    all_problems[pid] = {'title': f"{pid}：题目不存在", 'description':'', 'input':'', 'output':'', 'sample_input':'', 'sample_output':'', 'time_limit':'1000','memory_limit':'32768'}
+                    all_problems[pid] = {'title': f"{pid}：题目不存在", 'description':'', 'input':'', 'output':'', 'sample_input':'', 'sample_output':'', 'time_limit':'1000','memory_limit':'32768', 'exists': False}
                 time.sleep(1)
 
     # 合并已有 JSON
