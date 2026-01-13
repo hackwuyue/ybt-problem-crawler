@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+crawler.log
+
+# Data files (optional - uncomment if you want to track them)
+# data/
+# image/
+
+# Failed IDs
+failed_ids.txt
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store

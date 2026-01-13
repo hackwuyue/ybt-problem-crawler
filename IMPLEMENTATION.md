@@ -355,6 +355,72 @@ if not ids:
 
 ## 实现细节
 
+### 题目存在性检测
+
+**功能描述**：自动检测题目是否存在，避免为不存在的题目创建冗余数据。
+
+**检测机制**：
+
+1. **在爬取阶段标记**
+
+```python
+def crawl_problem(problem_id, session):
+    # 查找题目标题
+    for h3 in soup.find_all('h3'):
+        h3_text = h3.get_text(strip=True)
+        if str(problem_id) in h3_text:
+            title = h3_text
+            problem_exists = True
+            break
+    
+    # 如果未找到标题，标记为不存在
+    if not title:
+        title = f"{problem_id}：未知题目"
+        problem_exists = False
+    
+    # 在返回数据中添加标记
+    pdata['exists'] = problem_exists
+    return pdata
+```
+
+2. **在保存阶段检查**
+
+```python
+def save_sample_files(problem_data, problem_id):
+    if not problem_data.get('exists', True):
+        logging.info('跳过不存在的题目: %s', problem_id)
+        return False
+    # 正常保存文件...
+```
+
+3. **在 SQL 生成阶段检查**
+
+```python
+def generate_sql_insert(problem_data, problem_id):
+    if not problem_data.get('exists', True):
+        logging.info('跳过不存在的题目SQL生成: %s', problem_id)
+        return None
+    # 正常生成 SQL...
+```
+
+**效果**：
+- ✅ 不创建不存在题目的文件夹
+- ✅ 不生成不存在题目的 SQL INSERT 语句
+- ✅ JSON 中保留 `"exists": false` 标记用于追踪
+
+**示例**：
+```json
+{
+  "2228": {
+    "title": "2228：未知题目",
+    "exists": false,
+    "description": "",
+    "input": "",
+    "output": ""
+  }
+}
+```
+
 ### HTML 内容提取
 
 **原始 HTML 结构**：
