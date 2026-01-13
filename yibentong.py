@@ -244,27 +244,10 @@ def generate_sql_insert(problem_data, problem_id):
         logging.info('跳过不存在的题目SQL生成: %s', problem_id)
         return None
     try:
-        def find_primary_image_filename(pid):
-            img_dir = os.path.join('image', str(pid))
-            if not os.path.isdir(img_dir):
-                return None
-            for fname in os.listdir(img_dir):
-                if fname.startswith(f"{pid}.") or fname == str(pid):
-                    return fname
-            for ext in ('.png','.jpg','.jpeg','.gif'):
-                candidate = f"{pid}{ext}"
-                if os.path.exists(os.path.join(img_dir,candidate)):
-                    return candidate
-            return None
-
         def replace_image_srcs(html_content, pid):
-            if not html_content:
-                return html_content
-            primary = find_primary_image_filename(pid)
-            if not primary:
-                return html_content
-            pattern = re.compile(rf'(/upload/image/{pid}/)[^"\'>\s]+')
-            return pattern.sub(rf'\1{primary}', html_content)
+            # 不需要替换图片路径，直接返回原始HTML内容
+            # 图片路径在爬取时已经正确设置为 /upload/image/{pid}/{filename}
+            return html_content
 
         def escape_sql(text):
             if not text:
@@ -524,32 +507,12 @@ def main():
         problems_for_sql = all_problems
 
     # 规范图片引用
-    def normalize_problems_image_refs(problems_dict):
-        for pid_str,pdata in problems_dict.items():
-            try:
-                pid = int(pid_str)
-            except Exception:
-                continue
-            primary = None
-            img_dir = os.path.join('image', str(pid))
-            if os.path.isdir(img_dir):
-                for fname in os.listdir(img_dir):
-                    if fname.startswith(f"{pid}.") or fname == str(pid):
-                        primary = fname
-                        break
-                if not primary:
-                    for ext in ('.png','.jpg','.jpeg','.gif'):
-                        candidate = f"{pid}{ext}"
-                        if os.path.exists(os.path.join(img_dir,candidate)):
-                            primary = candidate
-                            break
-            if primary:
-                for key in ('description','input','output'):
-                    if key in pdata and pdata[key]:
-                        pdata[key] = re.sub(rf'(/upload/image/{pid}/)[^"\'>\s]+', rf'\1{primary}', pdata[key])
+    # SQL生成完毕
 
     try:
-        normalize_problems_image_refs(problems_for_sql)
+        # 不需要规范化图片引用 - JSON中已有正确的路径
+        # normalize_problems_image_refs(problems_for_sql)
+        pass
     except Exception:
         logging.exception('规范图片引用失败')
 
